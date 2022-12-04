@@ -101,7 +101,7 @@ print("Estimated number of noise points: %d" % n_noise_)
 
 #%% ------------------------------------------------
 # ================== PLOT UMAP ====================
-umap_label_by='labelsdbscan' # 'recpos' 'israining' 'hour' 'labelsdbscan' 'isloud'
+umap_label_by='recpos' # 'recpos' 'israining' 'hour' 'labelsdbscan' 'isloud'
 mycolorscale="Spectral"
 if Ndim_umap==2:  # Use UMAP.plot
     umap.plot.points(manifold, labels=df[umap_label_by],color_key_cmap=mycolorscale)
@@ -121,3 +121,6 @@ elif Ndim_umap==3: # Use babyplot
     #bp
     bp.save_as_html(outname)
 
+
+
+# %%
