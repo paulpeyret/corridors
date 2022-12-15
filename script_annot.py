@@ -180,6 +180,6 @@ matcorr=df_indices_small[Features_short].corr()
 heatmap = sns.heatmap(matcorr, annot=False, cmap="Blues",square=True,annot_kws={"fontsize":6})
 
 #%%
-sns.scatterplot(df_indices_small,x='NumB',y='NDSI')
+sns.regplot(df_indices_small,x='NumB',y='NDSI')
 
 # %%

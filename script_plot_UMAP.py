@@ -36,6 +36,8 @@ df_indices.drop('EPS',inplace=True, axis=1)
 df_indices["date"]=pd.to_datetime(df_indices['date'])
 df_indices['Time'] = df_indices['date'].dt.strftime('%H:%M')
 df_indices['hour']=df_indices['date'].dt.hour
+df_indices['hourstr']=df_indices['hour'].astype(str)
+df_indices['hourstr']=df_indices['hourstr'].str.zfill(2)+'h' # add zeros to get double digits hours and h
 df_indices['isloud']=df_indices['LEQf']>60
 
 
@@ -102,25 +104,32 @@ print("Estimated number of noise points: %d" % n_noise_)
 #%% ------------------------------------------------
 # ================== PLOT UMAP ====================
 umap_label_by='recpos' # 'recpos' 'israining' 'hour' 'labelsdbscan' 'isloud'
-mycolorscale="Spectral"
+mycolorscale="custom" # 'custom'
+my_colors=["#F0F000","#F00000","#00A0F0","#00A000"]
+
 if Ndim_umap==2:  # Use UMAP.plot
     umap.plot.points(manifold, labels=df[umap_label_by],color_key_cmap=mycolorscale)
 
 elif Ndim_umap==3: # Use babyplot
-    outname='UMAP_3D.html'
+    outname_html='UMAP_3D.html'
+    outname_json='UMAP_3D.json'
+
     labelbb=df[umap_label_by].to_numpy().tolist() # labels
-    bp=Babyplot()
-    bp.add_plot(X_reduced[:,:].tolist(), "pointCloud", "categories",labelbb, {"shape": "sphere",
+    bp=Babyplot(turntable=False,width=1280,height=960)
+    bp.add_plot(X_reduced[:,:].tolist(), "shapeCloud", "categories",labelbb, {"shape": "sphere",
+                                                                 "size": 0.4,
                                                                  "colorScale": mycolorscale,
-                                                                 "showAxes": [True, True, True],
+                                                                 "customColorScale": my_colors,
+                                                                 "showAxes": [False, False, False],
                                                                  "axisLabels": ["UMAP 1", "UMAP 2", "UMAP 3"],
                                                                  "showLegend": True,
                                                                  "fontSize": 12,
                                                                  "labelSize":20})
     
     #bp
-    bp.save_as_html(outname)
+    bp.save_as_html(outname_html,fullscreen=True,title="Corridors UMAP plot")
+    bp.save_as_json(outname_json)
 
-
+bp
 
 # %%

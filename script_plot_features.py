@@ -13,8 +13,7 @@ from mytoolbox import plot_daytime_map
 
 
 #%% =================== Load file===========================
-df_indices=pd.read_csv("df_indices.csv")
-df_indices.drop('file', inplace=True, axis=1) # drop path column
+df_indices=pd.read_csv("df_indices_weather.csv")
 
 # Retrieve datetime index
 fileformat='%Y%m%d_%H%M%S.WAV'
@@ -30,20 +29,25 @@ df_indices.drop('EPS',inplace=True, axis=1)
 # %% ==================Get the Subset of the data frame ==========
 ''' ===================USER INPUT=================='''
 # ================= user input ===============
-usefull_dates=["2021-03-29","2021-03-30"] # P1=["2021-03-26","2021-04-27"] P2=["2021-07-28","2021-08-26"]
-sel_recopos=["CH11"]#["CH9"] # ["CH9","CH10","CH11","CH12"]
+usefull_dates=["2021-03-29","2021-04-27"] # P1=["2021-03-26","2021-04-27"] P2=["2021-07-28","2021-08-26"]
+sel_recopos=["CH10"]#["CH9"] # ["CH9","CH10","CH11","CH12"]
 time_sample_per_hour=6 # Integer (there is maximum 6 samples per hour)
-indexName='Ht' # Name of the index to plot
-outdir=''#'./out_plot/' # your output directory name
+indexName='BI' # Name of the index to plot
+outdir='' # your output directory name
+flag_norain=False # if True, dataframe will drop rows with rain
 # ===============end user input ==============
 ''' ===================END USER INPUT=================='''
 
 # Compute the subset
-df=df_indices
+#df=df_indices
 df=df_indices[df_indices['recpos'].isin(sel_recopos)]
 df=df.iloc[::int(6/time_sample_per_hour), :]
 df=df[((df.index >= usefull_dates[0]) & (df.index <= usefull_dates[1]))]
-
+#
+if flag_norain: # remove rain if asked
+    #df.drop(df[df.israining==True].index, inplace=True)
+    #df[indexName].apply(lambda x: pd.NA if (x > 10 and x < 20) else False)
+    df.loc[df[indexName] == True, indexName] = pd.NA
 #%% =============Plot feature day time map ==========
 fig, ax, df_daytime=plot_daytime_map(df,indexName)
 if not outdir == "":
@@ -79,13 +83,20 @@ sel_recopos=["CH9","CH10","CH11","CH12"]#["CH9"]#["CH9","CH10","CH11","CH12"]#["
 df=df_indices
 df=df.iloc[::, :] # drop interhour data subset by hour
 df=df[df['recpos'].isin(sel_recopos)]
+
+# Drop rainy days
+df.drop(df[df.israining==True].index, inplace=True)
+# Drop loud recordings
+df.drop(df[df.LEQf>120].index, inplace=True)
+
 #mask=(df.index == "2021-03-29")
 #df=df[mask]
 df1=df[(df['period']=="P1")]
 df2=df[(df['period']=="P2")]
 
-#%% """# %% PLOT FEATURE MAP
 
+
+#%% """# %% PLOT FEATURE MAP
 '''
 SPECTRAL_FEATURES=['MEANf','VARf','SKEWf','KURTf','NBPEAKS','LEQf',
 'ENRf','BGNf','SNRf','Hf', 'EAS','ECU','ECV','EPS_KURT','EPS_SKEW','ACI',
@@ -104,6 +115,12 @@ FEATURES_SHORT=['LEQf','SNRf','BioEnergy','AnthroEnergy','ROItotal','NDSI','H','
 plot_features_map(df1[FEATURES_SHORT],mode='24h')
 plot_features_map(df2[FEATURES_SHORT],mode='24h')
 
-plot_correlation_map(df_indices[FEATURES_SHORT], R_threshold=0)
+fig4, ax4=plot_correlation_map(df[FEATURES_SHORT], R_threshold=0,vmin=-1,vmax=1)
+if not outdir == "":
+    fig4.savefig(outdir+'correlation_indices.png')
+
+# %%
+
+features.all_shape_features
 
 # %%
