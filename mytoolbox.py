@@ -1,12 +1,6 @@
 # Libaries
 import pandas as pd
-import scipy as sp
 import numpy as np
-from datetime import datetime
-from maad import sound, features
-from maad.util import (date_parser, plot_correlation_map,
-                       plot_features_map, plot_features, false_Color_Spectro)
-
 import matplotlib.pyplot as plt
 
 # =====================================
@@ -130,3 +124,53 @@ def plot_daytime_map(df,indexName, **kwargs):
     plt.show()
 
     return fig, ax , df_daily
+
+
+
+def calc_daytime_map(df,indexName):
+    """
+    Calculate daytime map on a specific index from datetime index dataframe 
+    
+    Parameters
+    ----------
+    df : Panda DataFrame
+        DataFrame with features (ie. indices).
+        /!\must have datetime index
+
+    indexName: String
+        The name of the index to plot
+        
+        
+    Returns
+    -------
+    df_daily : dataframe of daily and hourly 
+    """
+    if isinstance(df, pd.DataFrame) == False:
+        raise TypeError("df must be a Pandas Dataframe")
+    elif isinstance(df.index, pd.DatetimeIndex) == False:
+        raise TypeError("df must have an index of type DateTimeIndex")
+
+
+    #============ Compute New Dataframe =================
+    df_daily=pd.DataFrame() # create empty Dataframe
+    alldays=pd.date_range(start=np.min(df.index),end=np.max(df.index),freq='D')
+    alldays=alldays.strftime('%Y-%m-%d')
+    for day in alldays:
+        dftmp=df.loc[day,[indexName]]
+        ind_per_day=df.loc[day,[indexName]].reset_index(drop=True)
+        if ind_per_day.empty:
+            print('Empty day in dataframe ignored')
+        else:
+            ind_per_day['DayTime']=dftmp.index.strftime('%H:%M') # set new index
+            # If more than one value in the timestamp do the mean
+            ind_per_day=pd.DataFrame([{'DayTime': k,
+                            day: v[indexName].mean()}
+                        for k,v in ind_per_day.groupby(['DayTime'])],
+                        columns=['DayTime', day])
+
+            ind_per_day.set_index('DayTime', inplace=True)
+            ind_per_day.rename(columns={indexName:day},inplace=True)
+            df_daily=pd.concat([df_daily,ind_per_day],axis=1)
+
+    #====================================================
+    return df_daily
